@@ -2,11 +2,25 @@ import streamlit as st
 import mylibrary
 
 if not st.user.is_logged_in:
+    st.markdown(
+        """
+    <style>
+    /* Container */
+    div.block-container {
+        max-width:1100px; 
+    }
+    """,
+        unsafe_allow_html=True,
+    )
     with st.container(horizontal_alignment="center", key="title", width="stretch"):
-        mylibrary.title_text(
-            "Welcome To Sneako",
-            "kafsdfj askjdfa;klsdjf ajsfaskdjfaksd fjas;iejasgl;kjakdsgjklahsdguhdfjkghskdfhga sdfghaouks hasdv",
-        )
+
+        title = "Welcome To Sneako"
+        top_space = '<div style="padding: 50px 10px;"></div>'
+        bottom_space = '<div style="padding: 100px 10px;"></div>'
+
+        st.markdown(top_space, unsafe_allow_html=True)
+        st.title(title, anchor=None, help=None, width="content")
+        st.markdown(bottom_space, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3, width="stretch", border=True)
     with st.container(horizontal_alignment="center", key="features", width="stretch"):
@@ -26,10 +40,11 @@ if not st.user.is_logged_in:
             )
 
 else:
+    # to set div container
     st.markdown(
         """
     <style>
-    /* Sidebar container */
+    /* Container */
     div.block-container {
         max-width:1100px; 
     }

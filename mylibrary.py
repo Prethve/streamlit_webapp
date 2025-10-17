@@ -58,18 +58,6 @@ def extract_data():
 
 
 #### Styling functions ####
-# Title
-
-
-def title_text(title, caption):
-    top_space = '<div style="padding: 50px 10px;"></div>'
-    bottom_space = '<div style="padding: 100px 10px;"></div>'
-    return {
-        st.markdown(top_space, unsafe_allow_html=True),
-        st.title(title, anchor=None, help=None, width="content"),
-        st.write(caption),
-        st.markdown(bottom_space, unsafe_allow_html=True),
-    }
 
 
 # Main Page intro columns
