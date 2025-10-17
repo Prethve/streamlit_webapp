@@ -2,13 +2,23 @@ import streamlit as st
 import mylibrary
 
 # Defining the Pages
-marketplace = st.Page('pages/marketplace.py', title='Marketplace')
+marketplace = st.Page('pages/marketplace.py', title='Marketplace', default=True)
 trending = st.Page('pages/trending.py', title='Trending')
+listing = st.Page('pages/my_listing.py', title='My Listings')
+profile = st.Page('pages/my_profile.py', title='My Profile')
 
-navbar = st.navigation([marketplace, trending], position='sidebar')
+if not st.user.is_logged_in:
+    pages = {
+        'Search' : [marketplace, trending]
+    }
+else:
+    pages = {
+        'Pages': [profile, listing],
+        'Search' : [marketplace, trending]
+    }
+
+navbar = st.navigation(pages, position='sidebar')
 navbar.run()
-
-print(st.user.to_dict())
 
 with st.sidebar:
     if not st.user.is_logged_in:
@@ -19,4 +29,5 @@ with st.sidebar:
     if st.button("Log out", icon=':material/logout:'):
         st.logout()
             
+
         
