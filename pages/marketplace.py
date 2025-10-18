@@ -1,6 +1,7 @@
 import streamlit as st
 import mylibrary
 
+
 if not st.user.is_logged_in:
     with st.container(horizontal_alignment="center", key="title", width="stretch"):
         mylibrary.title_text(
@@ -36,34 +37,47 @@ else:
     """,
         unsafe_allow_html=True,
     )
+
+    with st.sidebar:
+        st.button("Toggle Cart", on_click=mylibrary.display_cart)
+
+    # Original shoes database in a list
+    shoe_db = mylibrary.extract_data()
+    # Sorted shoes database
+    shoe_db = mylibrary.bubble_sort_by_price(shoe_db)
+
+    # Brand Filter
+    brands = [
+        "ASICS",
+        "Adidas",
+        "Converse",
+        "HOKA",
+        "Jordan",
+        "New Balance",
+        "Nike",
+        "On",
+        "Puma",
+        "Reebok",
+        "Saucony",
+        "Vans",
+    ]
+
     with st.container(
         horizontal_alignment="center", key="main-container", width="stretch"
     ):
+
+        # mylibrary.render_cart_sidebar()
         st.title(f"Welcome, {st.user.name}!", anchor=None, help=None)
 
-        # Original shoes database in a list
-        shoe_db = mylibrary.extract_data()
-        # Sorted shoes database
-        shoe_db = mylibrary.bubble_sort_by_price(shoe_db)
-
-        # Brand Filter
-        brands = [
-            "ASICS",
-            "Adidas",
-            "Converse",
-            "HOKA",
-            "Jordan",
-            "New Balance",
-            "Nike",
-            "On",
-            "Puma",
-            "Reebok",
-            "Saucony",
-            "Vans",
-        ]
         select_brands = st.segmented_control(
             label="Brand", options=brands, selection_mode="multi", width="stretch"
         )
+
+        # initialize session state keys used for the dialog
+        if "show_info" not in st.session_state:
+            st.session_state["show_info"] = False
+        if "selected_shoe" not in st.session_state:
+            st.session_state["selected_shoe"] = None
 
         # Filtering out shoes according to user input in database
         filtered_db = []
@@ -81,14 +95,13 @@ else:
         columns = st.columns(num_columns, width="stretch")
 
         # Discount Section
-        discount, rand_shoes = mylibrary.seasonal_disc(4, 4, active_db)
-        print(rand_shoes)
+        discount, discounted_shoes = mylibrary.seasonal_disc(12, 12, shoe_db)
 
         # Filtering out shoes according to user input in the website (IMPORTANT)
         for i, value in enumerate(active_db):
             with columns[i % num_columns]:  # Distribute tiles across columns
                 tile_cont = st.container(
-                    height=180,
+                    height=190,
                     border=True,
                     width="stretch",
                     vertical_alignment="distribute",
@@ -97,16 +110,28 @@ else:
                     label=value["shoe_name"],
                     value="{:.2f}".format(
                         float(value["price"]) * (1 - discount)
-                        if i in rand_shoes
+                        if value in discounted_shoes
                         else float(value["price"])
                         # This is to randomise the discount to the number of shoes equivalent to the month
                     ),
                     delta=(
                         "{:.0f}%".format(-discount * 100)
-                        if i in rand_shoes
+                        if value in discounted_shoes
                         else None
                         # This is to randomise the discount to the number of shoes equivalent to the month
                     ),
                     delta_color="inverse",
                 )
-                tile_cont.caption(f"{value['brand']}")
+                bottom = tile_cont.container(
+                    horizontal=True,
+                    vertical_alignment="center",
+                    horizontal_alignment="distribute",
+                    width="stretch",
+                )
+                bottom.caption(f"{value['brand']}")
+                bottom.button(
+                    label="Info",
+                    key=value["shoe_id"],
+                    on_click=mylibrary.item_info,
+                    args=[value],
+                )

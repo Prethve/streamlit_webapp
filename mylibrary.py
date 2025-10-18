@@ -25,8 +25,10 @@ def bubble_sort_by_price(shoes):
 def extract_data():
     # shoe_db = pd.read_csv(CSV_PATH)
     shoe_db = []
+    # Reads CSV File
     with open(CSV_PATH, mode="r") as file:
         csv_file = csv.reader(file)
+        # Stored as a list of lists, hence for loop to iterate thorugh every list and convert them into a dictionary
         for lines in csv_file:
             shoe_dict = {
                 "shoe_name": lines[0],
@@ -42,24 +44,115 @@ def extract_data():
     return shoe_db
 
 
+###### Sidebar Implementation ######
+
+# Cart System
+cart = []
+
+
+def add_to_cart(shoe):
+    cart.append(shoe)
+
+
+@st.dialog("Your Cart", width="medium")
+def display_cart():
+    total = 0
+    if not cart:
+        st.write("Cart is empty")
+        return
+
+    for i, item in enumerate(cart):
+        cart_cont = st.container(
+            width="stretch",
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+            gap="large",
+        )
+
+        # use sized columns so left/middle/right alignment is predictable
+        cols = cart_cont.columns([3, 2, 1], gap="large")
+
+        # Left: name (flush left)
+        with cols[0]:
+            left = st.container(
+                horizontal=True, horizontal_alignment="left", width="stretch"
+            )
+            left.write(item.name)
+
+        # Middle: color (center)
+        with cols[1]:
+            center = st.container(
+                horizontal=True, horizontal_alignment="center", width="stretch"
+            )
+            center.write(item.color)
+
+        # Right: price (flush right)
+        with cols[2]:
+            right = st.container(
+                horizontal=True, horizontal_alignment="right", width="stretch"
+            )
+            right.write(item.price)
+        total += float(item.price)
+    st.divider()
+    total_cont = st.container(
+        horizontal=True,
+        horizontal_alignment="distribute",
+        vertical_alignment="center",
+        width="stretch",
+    )
+    total_cont.header("Total")
+    total_cont.header("{:.2f}".format(total), width=90)
+
+
+# Shoe Info Organisation
+class Shoe:
+    def __init__(self, name, price, color, brand):
+        self.name = name
+        self.price = price
+        self.color = color
+        self.brand = brand
+
+
+@st.dialog("Item information")
+def item_info(shoe_info):
+    # show the shoe name dynamically inside the dialog
+    shoe = Shoe(
+        shoe_info["shoe_name"],
+        shoe_info["price"],
+        shoe_info["color"],
+        shoe_info["brand"],
+    )
+
+    st.title(
+        shoe.name
+    )  # Later ad a string function to remove the colour from the title
+    st.header(shoe.price)
+    st.write(shoe.color)
+    st.write(shoe.brand)
+    if st.button("Add to Cart"):
+        add_to_cart(shoe)
+        st.success(f"Added {shoe.name} to cart.")
+    return None
+
+
 # Important
 def seasonal_disc(curr_month, curr_day, db):
     # Dictionary of special discount dates (month: day)
     discount_days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    shoe_count = []
+    discounted_shoes = []
 
     # Check if today's date qualifies for discount
     discount = 0
     for month in discount_days:
         if curr_month == month and curr_day == month:
             discount = 0.2  # 20% seasonal discount
-            for j in range(month):
-                shoe_count.append(random.randint(0, len(db)))
+            for j in range(0, len(db), len(db) // month):
+                discounted_shoes.append(db[j])
 
-    return discount, shoe_count
+    return discount, discounted_shoes
 
 
-# seasonal_disc()
 #### Styling functions ####
 def title_text(title, caption):
     top_space = '<div style="padding: 50px 10px;"></div>'
@@ -81,6 +174,3 @@ def column(feature, text):
         width="stretch",
     )
     return {st.header(feature, width="content"), st.caption(text, width="content")}
-
-
-# print(extract_data())
