@@ -1,26 +1,11 @@
 import streamlit as st
-
-# import pandas as pd
-import datetime as date
+from datetime import datetime
+import random
 import csv
 
 CSV_PATH = "/Users/deevprethve/Documents/School/SUTD/10.025 Computational Thinking for Design/streamlit_app/shOE_DTB.csv"
 
 ### Key Functions ####
-
-
-def calculate_total(oranges, apples):
-    return 2 * oranges + 3 * apples
-
-
-def plastic_bags_price(bags):
-    """one bag 0.1, two bags 0.4, three bags 0.9"""
-    return 0.1 * bags * bags
-
-
-def discounts():
-    today = date.today()
-    print(today)
 
 
 # IMPORTANT
@@ -57,10 +42,25 @@ def extract_data():
     return shoe_db
 
 
+# Important
+def seasonal_disc(curr_month, curr_day, db):
+    # Dictionary of special discount dates (month: day)
+    discount_days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    shoe_count = []
+
+    # Check if today's date qualifies for discount
+    discount = 0
+    for month in discount_days:
+        if curr_month == month and curr_day == month:
+            discount = 0.2  # 20% seasonal discount
+            for j in range(month):
+                shoe_count.append(random.randint(0, len(db)))
+
+    return discount, shoe_count
+
+
+# seasonal_disc()
 #### Styling functions ####
-# Title
-
-
 def title_text(title, caption):
     top_space = '<div style="padding: 50px 10px;"></div>'
     bottom_space = '<div style="padding: 100px 10px;"></div>'

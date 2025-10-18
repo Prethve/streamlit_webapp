@@ -45,8 +45,8 @@ else:
         shoe_db = mylibrary.extract_data()
         # Sorted shoes database
         shoe_db = mylibrary.bubble_sort_by_price(shoe_db)
-        filtered_db = []
 
+        # Brand Filter
         brands = [
             "ASICS",
             "Adidas",
@@ -61,32 +61,52 @@ else:
             "Saucony",
             "Vans",
         ]
-        brands.sort()
         select_brands = st.segmented_control(
             label="Brand", options=brands, selection_mode="multi", width="stretch"
         )
-        # Sorting the list of selected shoes based on price
-        filtered_db = mylibrary.bubble_sort_by_price(filtered_db)
 
         # Filtering out shoes according to user input in database
+        filtered_db = []
         for value in shoe_db:
             if value["brand"] in set(select_brands):
                 filtered_db.append(value)
 
+        # Sorting the list of selected shoes based on price
+        filtered_db = mylibrary.bubble_sort_by_price(filtered_db)
+
+        # Logic to determine what DB is active
+        active_db = filtered_db if filtered_db else shoe_db
+
         num_columns = 3
         columns = st.columns(num_columns, width="stretch")
 
+        # Discount Section
+        discount, rand_shoes = mylibrary.seasonal_disc(4, 4, active_db)
+        print(rand_shoes)
+
         # Filtering out shoes according to user input in the website (IMPORTANT)
-        for i, value in enumerate(filtered_db if filtered_db else shoe_db):
+        for i, value in enumerate(active_db):
             with columns[i % num_columns]:  # Distribute tiles across columns
                 tile_cont = st.container(
-                    height=160,
+                    height=180,
                     border=True,
                     width="stretch",
-                    vertical_alignment="bottom",
+                    vertical_alignment="distribute",
                 )
-                tile_cont.text(value["shoe_name"])
-                tile_cont.subheader(
-                    f"${value['price']}"
-                )  # Use the dictionary key as a tile title
+                tile_cont.metric(
+                    label=value["shoe_name"],
+                    value="{:.2f}".format(
+                        float(value["price"]) * (1 - discount)
+                        if i in rand_shoes
+                        else float(value["price"])
+                        # This is to randomise the discount to the number of shoes equivalent to the month
+                    ),
+                    delta=(
+                        "{:.0f}%".format(-discount * 100)
+                        if i in rand_shoes
+                        else None
+                        # This is to randomise the discount to the number of shoes equivalent to the month
+                    ),
+                    delta_color="inverse",
+                )
                 tile_cont.caption(f"{value['brand']}")
