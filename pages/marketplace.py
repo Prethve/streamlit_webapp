@@ -41,63 +41,55 @@ else:
     with st.sidebar:
         st.button("Toggle Cart", on_click=mylibrary.display_cart)
 
-    # Original shoes database in a list
+    ### 1. Extrating shoes database in a list from csv
     shoe_db = mylibrary.extract_data()
-    # Sorted shoes database
+
+    ### 2. Applying discount prior to Sorting
+    discount, discounted_shoes = mylibrary.seasonal_disc(12, 12, shoe_db)
+
+    ### 3. Sorting shoes database through custom bubble sort
     shoe_db = mylibrary.bubble_sort_by_price(shoe_db)
 
     # Brand Filter
-    brands = [
-        "ASICS",
-        "Adidas",
-        "Converse",
-        "HOKA",
-        "Jordan",
-        "New Balance",
-        "Nike",
-        "On",
-        "Puma",
-        "Reebok",
-        "Saucony",
-        "Vans",
-    ]
 
     with st.container(
         horizontal_alignment="center", key="main-container", width="stretch"
     ):
 
-        # mylibrary.render_cart_sidebar()
         st.title(f"Welcome, {st.user.name}!", anchor=None, help=None)
 
+        ### 4. Managing the filter function
+        # 4a. Brand Filter UI
+        brands = [
+            "ASICS",
+            "Adidas",
+            "Converse",
+            "HOKA",
+            "Jordan",
+            "New Balance",
+            "Nike",
+            "On",
+            "Puma",
+            "Reebok",
+            "Saucony",
+            "Vans",
+        ]
         select_brands = st.segmented_control(
             label="Brand", options=brands, selection_mode="multi", width="stretch"
         )
 
-        # initialize session state keys used for the dialog
-        if "show_info" not in st.session_state:
-            st.session_state["show_info"] = False
-        if "selected_shoe" not in st.session_state:
-            st.session_state["selected_shoe"] = None
-
-        # Filtering out shoes according to user input in database
+        # 4b. Filtering out shoes in database according to user input
         filtered_db = []
         for value in shoe_db:
             if value["brand"] in set(select_brands):
                 filtered_db.append(value)
 
-        # Sorting the list of selected shoes based on price
-        filtered_db = mylibrary.bubble_sort_by_price(filtered_db)
-
-        # Logic to determine what DB is active
+        ### 5. Logic to determine what shoe dateabase is active
         active_db = filtered_db if filtered_db else shoe_db
 
+        ### 6. Displaying filtered out shoes according to user input on the website (IMPORTANT)
         num_columns = 3
         columns = st.columns(num_columns, width="stretch")
-
-        # Discount Section
-        discount, discounted_shoes = mylibrary.seasonal_disc(12, 12, shoe_db)
-
-        # Filtering out shoes according to user input in the website (IMPORTANT)
         for i, value in enumerate(active_db):
             with columns[i % num_columns]:  # Distribute tiles across columns
                 tile_cont = st.container(
@@ -109,9 +101,9 @@ else:
                 tile_cont.metric(
                     label=value["shoe_name"],
                     value="{:.2f}".format(
-                        float(value["price"]) * (1 - discount)
-                        if value in discounted_shoes
-                        else float(value["price"])
+                        float(value["price"])
+                        # if value in discounted_shoes
+                        # else float(value["price"])
                         # This is to randomise the discount to the number of shoes equivalent to the month
                     ),
                     delta=(

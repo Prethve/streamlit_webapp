@@ -46,15 +46,11 @@ def extract_data():
 
 ###### Sidebar Implementation ######
 
-# Cart System
+# ------------ Cart System (start) -------------------
 cart = []
 
 
-def add_to_cart(shoe):
-    cart.append(shoe)
-
-
-@st.dialog("Your Cart", width="medium")
+@st.dialog("Your Cart", width="medium", on_dismiss=cart.clear)
 def display_cart():
     total = 0
     if not cart:
@@ -71,28 +67,28 @@ def display_cart():
         )
 
         # use sized columns so left/middle/right alignment is predictable
-        cols = cart_cont.columns([3, 2, 1], gap="large")
+        cols = cart_cont.columns(
+            [3, 2, 1], gap="large", width="stretch", vertical_alignment="center"
+        )
 
         # Left: name (flush left)
         with cols[0]:
-            left = st.container(
-                horizontal=True, horizontal_alignment="left", width="stretch"
-            )
-            left.write(item.name)
+            left = st.container(horizontal=True, horizontal_alignment="left", width=200)
+            left.caption(item.name, width="content")
 
         # Middle: color (center)
         with cols[1]:
             center = st.container(
-                horizontal=True, horizontal_alignment="center", width="stretch"
+                horizontal=True, horizontal_alignment="center", width=50
             )
-            center.write(item.color)
+            center.caption(item.color, width="content")
 
         # Right: price (flush right)
         with cols[2]:
             right = st.container(
-                horizontal=True, horizontal_alignment="right", width="stretch"
+                horizontal=True, horizontal_alignment="right", width=50
             )
-            right.write(item.price)
+            right.caption("{:.2f}".format(item.price), width="content")
         total += float(item.price)
     st.divider()
     total_cont = st.container(
@@ -100,12 +96,23 @@ def display_cart():
         horizontal_alignment="distribute",
         vertical_alignment="center",
         width="stretch",
+        height="content",
     )
-    total_cont.header("Total")
-    total_cont.header("{:.2f}".format(total), width=90)
+    if total_cont.button("Checkout", type="tertiary"):
+        st.success("Checked Out!", duration="short")
+        st.balloons()
+
+    total_cont.header(
+        "Total: {:.2f}".format(total),
+        width="content",
+        divider=True,
+    )
 
 
-# Shoe Info Organisation
+# ------------ Cart System (end) -------------------
+
+
+# Shoe Info Organisation, for easy storage of shoe attributes.
 class Shoe:
     def __init__(self, name, price, color, brand):
         self.name = name
@@ -114,6 +121,7 @@ class Shoe:
         self.brand = brand
 
 
+# To display the info of each shoe in the tiles
 @st.dialog("Item information")
 def item_info(shoe_info):
     # show the shoe name dynamically inside the dialog
@@ -127,11 +135,11 @@ def item_info(shoe_info):
     st.title(
         shoe.name
     )  # Later ad a string function to remove the colour from the title
-    st.header(shoe.price)
+    st.header("{:.2f}".format(shoe.price))
     st.write(shoe.color)
     st.write(shoe.brand)
     if st.button("Add to Cart"):
-        add_to_cart(shoe)
+        cart.append(shoe)
         st.success(f"Added {shoe.name} to cart.")
     return None
 
@@ -140,16 +148,19 @@ def item_info(shoe_info):
 def seasonal_disc(curr_month, curr_day, db):
     # Dictionary of special discount dates (month: day)
     discount_days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    discounted_shoes = []
+    discounted_shoes = []  # Stores the whole shoe dict
 
     # Check if today's date qualifies for discount
     discount = 0
     for month in discount_days:
         if curr_month == month and curr_day == month:
             discount = 0.2  # 20% seasonal discount
+            # For loop to decide which shoes to be discounted
             for j in range(0, len(db), len(db) // month):
+                # Applies discount and updates DB
+                db[j]["price"] = float(db[j]["price"]) * (1 - discount)
+                # Collects all discounted shoes data
                 discounted_shoes.append(db[j])
-
     return discount, discounted_shoes
 
 
