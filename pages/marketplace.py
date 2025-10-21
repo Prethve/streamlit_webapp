@@ -27,10 +27,18 @@ if not st.user.is_logged_in:
             )
 
 else:
+    ### 1. Extrating shoes database in a list from csv
+    shoe_db = mylibrary.extract_data()
+
+    ### 2. Applying discount prior to Sorting
+    discount, discounted_shoes = mylibrary.seasonal_disc(12, 12, shoe_db)
+
+    ### 3. Sorting shoes database through custom bubble sort
+    mylibrary.bubble_sort_by_price(shoe_db)
+
     st.markdown(
         """
     <style>
-    /* Sidebar container */
     div.block-container {
         max-width:1100px; 
     }
@@ -41,15 +49,6 @@ else:
     with st.sidebar:
         st.button("Toggle Cart", on_click=mylibrary.display_cart)
 
-    ### 1. Extrating shoes database in a list from csv
-    shoe_db = mylibrary.extract_data()
-
-    ### 2. Applying discount prior to Sorting
-    discount, discounted_shoes = mylibrary.seasonal_disc(12, 12, shoe_db)
-
-    ### 3. Sorting shoes database through custom bubble sort
-    shoe_db = mylibrary.bubble_sort_by_price(shoe_db)
-
     # Brand Filter
 
     with st.container(
@@ -59,7 +58,7 @@ else:
         st.title(f"Welcome, {st.user.name}!", anchor=None, help=None)
 
         ### 4. Managing the filter function
-        # 4a. Brand Filter UI
+        # 4a. Brand Filter UI (Add a Flash Sale Filter also to show dicounted shoes first)
         brands = [
             "ASICS",
             "Adidas",
@@ -77,6 +76,7 @@ else:
         select_brands = st.segmented_control(
             label="Brand", options=brands, selection_mode="multi", width="stretch"
         )
+        st.divider()
 
         # 4b. Filtering out shoes in database according to user input
         filtered_db = []
@@ -91,6 +91,11 @@ else:
         num_columns = 3
         columns = st.columns(num_columns, width="stretch")
         for i, value in enumerate(active_db):
+
+            # Creating a unique shoe object (in memory) for each tile
+            shoe = mylibrary.Shoe(
+                value["shoe_name"], value["price"], value["color"], value["brand"]
+            )
             with columns[i % num_columns]:  # Distribute tiles across columns
                 tile_cont = st.container(
                     height=190,
@@ -99,13 +104,8 @@ else:
                     vertical_alignment="distribute",
                 )
                 tile_cont.metric(
-                    label=value["shoe_name"],
-                    value="{:.2f}".format(
-                        float(value["price"])
-                        # if value in discounted_shoes
-                        # else float(value["price"])
-                        # This is to randomise the discount to the number of shoes equivalent to the month
-                    ),
+                    label=shoe.name,
+                    value="{:.2f}".format(shoe.price),
                     delta=(
                         "{:.0f}%".format(-discount * 100)
                         if value in discounted_shoes
@@ -120,10 +120,6 @@ else:
                     horizontal_alignment="distribute",
                     width="stretch",
                 )
-                bottom.caption(f"{value['brand']}")
-                bottom.button(
-                    label="Info",
-                    key=value["shoe_id"],
-                    on_click=mylibrary.item_info,
-                    args=[value],
-                )
+                bottom.caption(f"{shoe.brand}")
+                if bottom.button(label="Info", key=value["shoe_id"]):
+                    shoe.item_info()

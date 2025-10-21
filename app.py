@@ -3,17 +3,22 @@ import mylibrary
 
 if "shoe" not in st.session_state:
     st.session_state["shoe"] = "value"
+if "checked_out" not in st.session_state:
+    st.session_state["checked_out"] = False
+
 
 # Defining the Pages
 marketplace = st.Page("pages/marketplace.py", title="Marketplace", default=True)
-trending = st.Page("pages/trending.py", title="Trending")
-listing = st.Page("pages/my_listing.py", title="My Listings")
-profile = st.Page("pages/my_profile.py", title="My Profile")
+trending = st.Page("pages/trending.py", title="Flash Sale")
+# listing = st.Page("pages/my_listing.py", title="My Listings")
+# profile = st.Page("pages/my_profile.py", title="My Profile")
 
 if not st.user.is_logged_in:
     pages = {"Search": [marketplace, trending]}
 else:
-    pages = {"Pages": [profile, listing], "Search": [marketplace, trending]}
+    pages = {
+        "Search": [marketplace, trending]
+    }  # "Pages": [profile, listing], (Decide if we wanna add, runnnig out of time)
 
 navbar = st.navigation(pages, position="sidebar")
 navbar.run()

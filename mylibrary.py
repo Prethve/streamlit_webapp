@@ -5,52 +5,20 @@ import csv
 
 CSV_PATH = "/Users/deevprethve/Documents/School/SUTD/10.025 Computational Thinking for Design/streamlit_app/shOE_DTB.csv"
 
-### Key Functions ####
-
-
-# IMPORTANT
-def bubble_sort_by_price(shoes):
-    n = len(shoes)
-    # Loop through all elements in the list
-    for i in range(n - 1):
-        # Last i elements are already sorted
-        for j in range(n - i - 1):
-            if float(shoes[j]["price"]) > float(shoes[j + 1]["price"]):
-                # Swap the dictionaries
-                shoes[j], shoes[j + 1] = shoes[j + 1], shoes[j]
-    return shoes
-
-
-# IMPORTANT
-def extract_data():
-    # shoe_db = pd.read_csv(CSV_PATH)
-    shoe_db = []
-    # Reads CSV File
-    with open(CSV_PATH, mode="r") as file:
-        csv_file = csv.reader(file)
-        # Stored as a list of lists, hence for loop to iterate thorugh every list and convert them into a dictionary
-        for lines in csv_file:
-            shoe_dict = {
-                "shoe_name": lines[0],
-                "shoe_id": lines[1],
-                "brand": lines[2],
-                "size_available": lines[3],
-                "price": lines[4],
-                "color": lines[5],
-                "stock": lines[6],
-                "seller_username": lines[7],
-            }
-            shoe_db.append(shoe_dict)
-    return shoe_db
-
-
-###### Sidebar Implementation ######
-
-# ------------ Cart System (start) -------------------
+# ------------ Cart System (start) -------------------#
 cart = []
 
+def checkout_handler():
+    if st.session_state["checked_out"] == True and cart:
+        cart.clear()
+        st.session_state["checked_out"] = False
 
-@st.dialog("Your Cart", width="medium", on_dismiss=cart.clear)
+
+@st.dialog(
+    "Your Cart",
+    width="medium",
+    on_dismiss=checkout_handler,
+)
 def display_cart():
     total = 0
     if not cart:
@@ -89,7 +57,7 @@ def display_cart():
                 horizontal=True, horizontal_alignment="right", width=50
             )
             right.caption("{:.2f}".format(item.price), width="content")
-        total += float(item.price)
+        total += item.price
     st.divider()
     total_cont = st.container(
         horizontal=True,
@@ -99,8 +67,9 @@ def display_cart():
         height="content",
     )
     if total_cont.button("Checkout", type="tertiary"):
-        st.success("Checked Out!", duration="short")
+        st.success("Checked Out!")
         st.balloons()
+        st.session_state["checked_out"] = True
 
     total_cont.header(
         "Total: {:.2f}".format(total),
@@ -109,10 +78,10 @@ def display_cart():
     )
 
 
-# ------------ Cart System (end) -------------------
+# --------------- Cart System (end) ------------------- #
 
 
-# Shoe Info Organisation, for easy storage of shoe attributes.
+# ------------ Shoe Object System (start) ------------- #
 class Shoe:
     def __init__(self, name, price, color, brand):
         self.name = name
@@ -120,31 +89,59 @@ class Shoe:
         self.color = color
         self.brand = brand
 
-
-# To display the info of each shoe in the tiles
-@st.dialog("Item information")
-def item_info(shoe_info):
-    # show the shoe name dynamically inside the dialog
-    shoe = Shoe(
-        shoe_info["shoe_name"],
-        shoe_info["price"],
-        shoe_info["color"],
-        shoe_info["brand"],
-    )
-
-    st.title(
-        shoe.name
-    )  # Later ad a string function to remove the colour from the title
-    st.header("{:.2f}".format(shoe.price))
-    st.write(shoe.color)
-    st.write(shoe.brand)
-    if st.button("Add to Cart"):
-        cart.append(shoe)
-        st.success(f"Added {shoe.name} to cart.")
-    return None
+    # To display the info of each shoe in the tiles
+    @st.dialog("Item information")
+    def item_info(self):
+        st.title(
+            self.name
+        )  # Later ad a string function to remove the colour from the title
+        st.header("{:.2f}".format(self.price))
+        st.write(self.color)
+        st.write(self.brand)
+        if st.button("Add to Cart"):
+            cart.append(self)
+            st.success(f"Added {self.name} to cart.")
 
 
-# Important
+# ------------- Shoe Object System (end) -------------#
+
+
+# IMPORTANT
+def bubble_sort_by_price(shoes):
+    n = len(shoes)
+    # Loop through all elements in the list
+    for i in range(n - 1):
+        # Last i elements are already sorted
+        for j in range(n - i - 1):
+            if shoes[j]["price"] > shoes[j + 1]["price"]:
+                # Swap the dictionaries
+                shoes[j], shoes[j + 1] = shoes[j + 1], shoes[j]
+    # return shoes
+
+
+# IMPORTANT
+def extract_data():
+    shoe_db = []
+    # Reads CSV File
+    with open(CSV_PATH, mode="r") as file:
+        csv_file = csv.reader(file)
+        # Stored as a list of lists, hence for loop to iterate thorugh every list and convert them into a dictionary
+        for lines in csv_file:
+            shoe_dict = {
+                "shoe_name": lines[0],
+                "shoe_id": lines[1],
+                "brand": lines[2],
+                "size_available": lines[3],
+                "price": float(lines[4]),
+                "color": lines[5],
+                "stock": lines[6],
+                "seller_username": lines[7],
+            }
+            shoe_db.append(shoe_dict)
+    return shoe_db
+
+
+# IMPORTANT
 def seasonal_disc(curr_month, curr_day, db):
     # Dictionary of special discount dates (month: day)
     discount_days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -158,7 +155,7 @@ def seasonal_disc(curr_month, curr_day, db):
             # For loop to decide which shoes to be discounted
             for j in range(0, len(db), len(db) // month):
                 # Applies discount and updates DB
-                db[j]["price"] = float(db[j]["price"]) * (1 - discount)
+                db[j]["price"] = db[j]["price"] * (1 - discount)
                 # Collects all discounted shoes data
                 discounted_shoes.append(db[j])
     return discount, discounted_shoes
