@@ -2,31 +2,29 @@ import streamlit as st
 from datetime import datetime
 import random
 import csv
+import copy
+
 
 CSV_PATH = "/Users/deevprethve/Documents/School/SUTD/10.025 Computational Thinking for Design/streamlit_app/shOE_DTB.csv"
 
 # ------------ Cart System (start) -------------------#
+### create a cart and purchase
 cart = []
-
-def checkout_handler():
-    if st.session_state["checked_out"] == True and cart:
-        cart.clear()
-        st.session_state["checked_out"] = False
+purchase_history = []
 
 
-@st.dialog(
-    "Your Cart",
-    width="medium",
-    on_dismiss=checkout_handler,
-)
+###display "CART"
+@st.dialog("Your Cart", width="medium")
 def display_cart():
     total = 0
     if not cart:
         st.write("Cart is empty")
         return
-
-    for i, item in enumerate(cart):
+    
+    ### COUNTING THE NUMBER OF ITEM IN CART
+    for item in cart:
         cart_cont = st.container(
+            ###SETTING THE CART TITLE BOX
             width="stretch",
             horizontal=True,
             horizontal_alignment="distribute",
@@ -35,24 +33,32 @@ def display_cart():
         )
 
         # use sized columns so left/middle/right alignment is predictable
-        cols = cart_cont.columns(
-            [3, 2, 1], gap="large", width="stretch", vertical_alignment="center"
-        )
+        cols = cart_cont.columns([3, 2, 2, 1], gap="small", vertical_alignment="center")
 
         # Left: name (flush left)
         with cols[0]:
-            left = st.container(horizontal=True, horizontal_alignment="left", width=200)
+            left = st.container(
+                horizontal=True, horizontal_alignment="left", width="stretch"
+            )
             left.caption(item.name, width="content")
 
         # Middle: color (center)
         with cols[1]:
             center = st.container(
-                horizontal=True, horizontal_alignment="center", width=50
+                horizontal=True, horizontal_alignment="left", width=50
             )
             center.caption(item.color, width="content")
 
-        # Right: price (flush right)
         with cols[2]:
+            center_right = st.container(
+                horizontal=True, horizontal_alignment="center", width=50
+            )
+            center_right.caption(
+                item.size, width="content"
+            )  # Add a remove opttion for the shoes
+
+        # Right: price (flush right)
+        with cols[3]:
             right = st.container(
                 horizontal=True, horizontal_alignment="right", width=50
             )
@@ -69,7 +75,9 @@ def display_cart():
     if total_cont.button("Checkout", type="tertiary"):
         st.success("Checked Out!")
         st.balloons()
-        st.session_state["checked_out"] = True
+        for bought_shoe in cart:
+            purchase_history.append(bought_shoe)
+        cart.clear()
 
     total_cont.header(
         "Total: {:.2f}".format(total),
@@ -83,24 +91,33 @@ def display_cart():
 
 # ------------ Shoe Object System (start) ------------- #
 class Shoe:
-    def __init__(self, name, price, color, brand):
+    def __init__(self, name, price, color, brand, sizes, stock):
         self.name = name
         self.price = price
         self.color = color
         self.brand = brand
+        self.sizes = sizes
+        self.stock = stock
+        self.size = None
 
     # To display the info of each shoe in the tiles
     @st.dialog("Item information")
     def item_info(self):
-        st.title(
-            self.name
-        )  # Later ad a string function to remove the colour from the title
-        st.header("{:.2f}".format(self.price))
-        st.write(self.color)
-        st.write(self.brand)
+        st.title(self.name)
+        st.title("{:.2f}".format(self.price))
+        st.write(f":grey[Variant: ] {self.color}")
+        st.write(f":grey[Brand: ] {self.brand}")
+        st.write(f":grey[In Stock: ] {self.stock}")
+        size_cont = st.container(horizontal=True, horizontal_alignment="center")
+        for i in self.sizes:
+            if size_cont.button(label=f":green[{i}]", key=i):
+                self.size = i
         if st.button("Add to Cart"):
-            cart.append(self)
-            st.success(f"Added {self.name} to cart.")
+            if self.size == None:
+                st.error("Please select your size")
+            else:
+                cart.append(copy.deepcopy(self))
+                st.success(f"Added {self.name} to cart.")
 
 
 # ------------- Shoe Object System (end) -------------#
@@ -111,8 +128,11 @@ def bubble_sort_by_price(shoes):
     n = len(shoes)
     # Loop through all elements in the list
     for i in range(n - 1):
+        ## i takes values from 0 to n-2 (n-2 represents the no of pairings)
+        ## first forloop is to compare those side by side
         # Last i elements are already sorted
         for j in range(n - i - 1):
+            ##second forloop is to ensure it is arranged in accending order in
             if shoes[j]["price"] > shoes[j + 1]["price"]:
                 # Swap the dictionaries
                 shoes[j], shoes[j + 1] = shoes[j + 1], shoes[j]
@@ -128,10 +148,10 @@ def extract_data():
         # Stored as a list of lists, hence for loop to iterate thorugh every list and convert them into a dictionary
         for lines in csv_file:
             shoe_dict = {
-                "shoe_name": lines[0],
+                "shoe_name": lines[0].replace(f"- {lines[5]}", "").strip(),
                 "shoe_id": lines[1],
                 "brand": lines[2],
-                "size_available": lines[3],
+                "size_available": [s.strip() for s in lines[3].split(",")],
                 "price": float(lines[4]),
                 "color": lines[5],
                 "stock": lines[6],
@@ -141,6 +161,7 @@ def extract_data():
     return shoe_db
 
 
+###TO IMPORT DATE
 # IMPORTANT
 def seasonal_disc(curr_month, curr_day, db):
     # Dictionary of special discount dates (month: day)
