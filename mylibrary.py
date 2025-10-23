@@ -5,7 +5,7 @@ import csv
 import copy
 
 
-CSV_PATH = "/Users/deevprethve/Documents/School/SUTD/10.025 Computational Thinking for Design/streamlit_app/shOE_DTB.csv"
+CSV_PATH = 'shOE_DTB.csv'
 
 # ------------ Cart System (start) -------------------#
 ### create a cart and purchase

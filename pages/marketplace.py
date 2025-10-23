@@ -1,32 +1,6 @@
 import streamlit as st
 import mylibrary
 
-
-# if not st.user.is_logged_in:
-#     with st.container(horizontal_alignment="center", key="title", width="stretch"):
-#         mylibrary.title_text(
-#             "Welcome To Sneako",
-#             "kafsdfj askjdfa;klsdjf ajsfaskdjfaksd fjas;iejasgl;kjakdsgjklahsdguhdfjkghskdfhga sdfghaouks hasdv",
-#         )
-
-#     col1, col2, col3 = st.columns(3, width="stretch", border=True)
-#     with st.container(horizontal_alignment="center", key="features", width="stretch"):
-#         with col1:
-#             mylibrary.column(
-#                 "Unbeatable Deals", "asdgfhj fasdfa gdfhsdfghdfhsdf shf sdfsdfg hfh"
-#             )
-
-#         with col2:
-#             mylibrary.column(
-#                 "Diverse Collection", "asdgfhj fasdfa gdfhsdfghdfhsdf shf sdfsdfg hfh"
-#             )
-
-#         with col3:
-#             mylibrary.column(
-#                 "Convenient Shopping", "asdgfhj fasdfa gdfhsdfghdfhsdf shf sdfsdfg hfh"
-#             )
-
-# else:
 ### 1. Extrating shoes database in a list from csv
 shoe_db = mylibrary.extract_data()
 
@@ -51,11 +25,9 @@ with st.sidebar:
 
 # Brand Filter
 
-with st.container(
-    horizontal_alignment="center", key="main-container", width="stretch"
-):
+with st.container(horizontal_alignment="center", key="main-container", width="stretch"):
 
-    st.title(f"Welcome, {st.user.name}!", anchor=None, help=None)
+    st.title(f"Sneako", anchor=None, help=None)
 
     ### 4. Managing the filter function
     # 4a. Brand Filter UI (Add a Flash Sale Filter also to show dicounted shoes first)
